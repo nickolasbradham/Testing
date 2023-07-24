@@ -50,8 +50,8 @@ final class Tester {
 
 		@Override
 		public final String toString() {
-			return "[" + name + "," + machine + "," + Arrays.toString(input) + "," + time + ","
-					+ Arrays.toString(output) + "]";
+			return "(" + name + "," + machine + "," + Arrays.toString(input) + "," + time + ","
+					+ Arrays.toString(output) + ")";
 		}
 	}
 
