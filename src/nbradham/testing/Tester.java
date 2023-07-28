@@ -1,5 +1,6 @@
 package nbradham.testing;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -37,15 +38,21 @@ final class Tester {
 		}
 
 		float sum, rate;
+		ArrayList<Recipe> cs = new ArrayList<>();
 		while (!queue.isEmpty()) {
 			sum = 0;
 			rate = 60 / (r = queue.poll()).getTime();
+			System.out.printf("Processing %s... ", r.getName());
 			for (ItemStack is : r.getInput())
 				sum += rate * prodDetails.get(is.name()).getWeight();
+			System.out.println(sum);
 			if (sum < r.getWeight()) {
 				r.setWeight(sum);
+				cs.clear();
 				for (ItemStack is : r.getOutput())
-					queue.addAll(Arrays.asList(prodDetails.get(is.name()).getConsumers()));
+					cs.addAll(Arrays.asList(prodDetails.get(is.name()).getConsumers()));
+				queue.addAll(cs);
+				System.out.printf("ADDED MORE: %s%n", cs);
 			}
 		}
 		prodDetails.values().forEach(v -> v.update());
@@ -53,6 +60,7 @@ final class Tester {
 	}
 
 	public static void main(String[] args) {
+		System.out.println("Started.");
 		new Tester().start();
 	}
 }

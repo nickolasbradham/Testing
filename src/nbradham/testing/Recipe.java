@@ -15,6 +15,7 @@ final class Recipe {
 	}
 
 	void setWeight(float newWeight) {
+		System.out.printf("Weight (%s) %f -> %f%n", name, weight, newWeight);
 		weight = newWeight;
 	}
 
@@ -24,6 +25,10 @@ final class Recipe {
 
 	ItemStack[] getOutput() {
 		return output;
+	}
+
+	String getName() {
+		return name;
 	}
 
 	short getTime() {
@@ -36,6 +41,6 @@ final class Recipe {
 
 	@Override
 	public final String toString() {
-		return weight+name;
+		return weight + " " + name;
 	}
 }
