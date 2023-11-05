@@ -1,25 +1,48 @@
 package nbradham.testing;
 
-import com.fazecast.jSerialComm.SerialPort;
+import java.awt.Graphics;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.io.IOException;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
-final class Tester {
+final class Tester extends JPanel {
+	private static final long serialVersionUID = 1L;
 
-	private static final String[] MESSAGES = { "Beep. Boop.", "I'm a computer.", "I'm sorry, Dave.",
-			"Stealing your\nbank details...", "2 + 2 = Fish" };
+	private final CardManager cm = new MapCardManager();
 
-	public static void main(String[] args) throws InterruptedException {
-		SerialPort sp = SerialPort.getCommPort("COM6");
-		sp.setComPortParameters(9600, 8, 1, SerialPort.NO_PARITY);
-		sp.clearDTR();
-		sp.clearRTS();
-		sp.setFlowControl(SerialPort.FLOW_CONTROL_DISABLED);
-		System.out.println(sp.openPort());
-		for (byte n = 0; n < 50; ++n) {
-			int r = n % MESSAGES.length;
-			System.out.println("Sending: " + MESSAGES[r]);
-			sp.writeBytes(MESSAGES[r].getBytes(), 50);
-			Thread.sleep(2000);
-		}
-		sp.closePort();
+	private Tester() throws IOException {
+		super();
+		setFocusable(true);
+		addKeyListener(new KeyAdapter() {
+			@Override
+			public final void keyTyped(KeyEvent e) {
+				repaint();
+			}
+		});
+	}
+
+	@Override
+	public final void paint(Graphics g) {
+		long start = System.currentTimeMillis();
+		for (short i = 0; i < 5000; ++i)
+			cm.drawCard(g);
+		System.out.println(System.currentTimeMillis() - start);
+	}
+
+	public static void main(String[] args) {
+		SwingUtilities.invokeLater(() -> {
+			JFrame frame = new JFrame();
+			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			frame.setSize(1366, 768);
+			try {
+				frame.setContentPane(new Tester());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			frame.setVisible(true);
+		});
 	}
 }
