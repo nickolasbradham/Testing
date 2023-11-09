@@ -1,48 +1,90 @@
 package nbradham.testing;
 
-import java.awt.Graphics;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.io.IOException;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
+import java.awt.AWTException;
+import java.awt.Robot;
+import java.awt.event.InputEvent;
 
-final class Tester extends JPanel {
-	private static final long serialVersionUID = 1L;
+import com.github.kwhat.jnativehook.GlobalScreen;
+import com.github.kwhat.jnativehook.NativeHookException;
+import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent;
+import com.github.kwhat.jnativehook.keyboard.NativeKeyListener;
+import com.github.kwhat.jnativehook.mouse.NativeMouseEvent;
+import com.github.kwhat.jnativehook.mouse.NativeMouseListener;
 
-	private final CardManager cm = new MapCardManager();
+final class Tester {
 
-	private Tester() throws IOException {
-		super();
-		setFocusable(true);
-		addKeyListener(new KeyAdapter() {
+	public static void main(String[] args) throws NativeHookException {
+		GlobalScreen.registerNativeHook();
+		Clicker c = new Clicker();
+		c.start();
+		GlobalScreen.addNativeMouseListener(new NativeMouseListener() {
 			@Override
-			public final void keyTyped(KeyEvent e) {
-				repaint();
+			public void nativeMouseClicked(NativeMouseEvent nativeEvent) {
+				if (nativeEvent.getButton() == NativeMouseEvent.BUTTON3)
+					c.toggle();
+			}
+		});
+		GlobalScreen.addNativeKeyListener(new NativeKeyListener() {
+			@Override
+			public void nativeKeyPressed(NativeKeyEvent e) {
+				if (e.getKeyCode() == NativeKeyEvent.VC_F1) {
+					c.kill();
+					try {
+						GlobalScreen.unregisterNativeHook();
+					} catch (NativeHookException e1) {
+						e1.printStackTrace();
+					}
+				}
 			}
 		});
 	}
 
-	@Override
-	public final void paint(Graphics g) {
-		long start = System.currentTimeMillis();
-		for (short i = 0; i < 5000; ++i)
-			cm.drawCard(g);
-		System.out.println(System.currentTimeMillis() - start);
-	}
+	private static final class Clicker extends Thread {
 
-	public static void main(String[] args) {
-		SwingUtilities.invokeLater(() -> {
-			JFrame frame = new JFrame();
-			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			frame.setSize(1366, 768);
+		private boolean run = true, click = false;
+
+		private void toggle() {
+			click = !click;
+			synchronized (this) {
+				notify();
+			}
+		}
+
+		private void kill() {
+			run = false;
+			click = false;
+			synchronized (this) {
+				notify();
+			}
+		}
+
+		@Override
+		public void run() {
+			Robot r = null;
 			try {
-				frame.setContentPane(new Tester());
-			} catch (IOException e) {
+				r = new Robot();
+			} catch (AWTException e) {
 				e.printStackTrace();
 			}
-			frame.setVisible(true);
-		});
+			while (run) {
+				while (click) {
+					r.mousePress(InputEvent.BUTTON1_DOWN_MASK);
+					r.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
+					try {
+						Thread.sleep(1);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+				if (run)
+					try {
+						synchronized (this) {
+							wait();
+						}
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+			}
+		}
 	}
 }
