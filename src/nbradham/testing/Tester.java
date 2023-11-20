@@ -1,18 +1,28 @@
 package nbradham.testing;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
+import java.io.PrintWriter;
+import java.util.Scanner;
 
 final class Tester {
 
 	public static void main(String[] args) throws IOException {
-		ZipOutputStream zfos = new ZipOutputStream(new FileOutputStream("out.zip"));
-		zfos.putNextEntry(new ZipEntry("test0.txt"));
-		zfos.write("t0".getBytes());
-		zfos.putNextEntry(new ZipEntry("test1.txt"));
-		zfos.write("t1".getBytes());
-		zfos.close();
+		Process p = Runtime.getRuntime()
+				.exec(new String[] { "C:\\Program Files (x86)\\Steam\\steamapps\\common\\U3DS\\Unturned.exe" });
+		Scanner s = new Scanner(p.getInputStream());
+		PrintWriter pw = new PrintWriter(p.getOutputStream(), true);
+		Scanner sSTD = new Scanner(System.in);
+		new Thread(() -> {
+			while (s.hasNext())
+				System.out.printf("[CHILD] %s%n", s.nextLine());
+			System.out.println("Thread ended.");
+		}).start();
+		String st;
+		while (p.isAlive()) {
+			st = sSTD.nextLine();
+			System.out.printf("[HOST] Sending to child: %s%n", st);
+			pw.println(st);
+		}
+		sSTD.close();
 	}
 }
